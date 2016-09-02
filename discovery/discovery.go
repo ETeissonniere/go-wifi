@@ -162,7 +162,7 @@ func StartDiscovery(iface string) (Discovery, error) {
 		Running: false,
 	}
 
-	if err != nil {
+	if err == nil {
 		discovery.Running = true
 		discovery.process = cmd.Process
 	}
