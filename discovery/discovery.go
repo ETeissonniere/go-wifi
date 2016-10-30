@@ -39,6 +39,8 @@ func (d *Discovery) Stop() error {
 	return nil
 }
 
+// TODO: use a netxml parser
+
 // THE most important function: parse /tmp/discovery-01.csv and fill the structs
 // Might be nice to run as a goroutine...
 // IDEA: parallelise the parsing with 2 goroutines
