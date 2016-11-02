@@ -53,13 +53,14 @@ func (c *Capture) Init(path_to_captures string, privacy string, bssid string, es
 	c.Target.Essid = essid
 	c.Target.Privacy = privacy
 
+	/*
 	// Check if we have an Handshake
 	if privacy == "WPA" || privacy == "WPA2" {
 		c.checkForHandshake()
 	}
 
 	c.getIVs()
-
+	*/
 }
 
 // Return succesfull key
@@ -71,7 +72,7 @@ func (c *Capture) TryKeys(...string) string {
 func (c *Capture) AttemptToCrack() (bool, string) {
 	return false, nil
 }
-
+/*
 func (c *Capture) checkForHandshake() {
 	// Thank you wifite (l. 2478, has_handshake_aircrack)
 	cmd := exec.Command(`echo "" | aircrack-ng -a 2 -w - -b ` + c.Target.Bssid + " " + c.pcap_file)
@@ -90,3 +91,4 @@ func (c *Capture) checkForHandshake() {
 func (c *Capture) getIVs() {
 
 }
+*/
