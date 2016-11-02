@@ -29,6 +29,7 @@ import (
 	"os/exec"
 
 	"../attacks"
+	"../captures"
 )
 
 // JSON exportable structs
@@ -131,7 +132,7 @@ func (a *AP) ArpReplay(iface string) (attacks.Attack, error) {
 }
 
 // Start a capture process
-func (a *AP) Capture(iface string) (attacks.Attack, string, error) {
+func (a *AP) Capture(iface string) (attacks.Attack, captures.Capture, error) {
 	path := "go-wifi_capture-" + strconv.Itoa(captures_nb)
 	captures_nb += 1
 
@@ -159,8 +160,11 @@ func (a *AP) Capture(iface string) (attacks.Attack, string, error) {
 		cur_atk.Init(cmd.Process)
 	}
 
-	// Because of an import cycle, we cannot build the Capture object, we just return the dir's path
-	return cur_atk, path, err
+	// Time to build the Capture
+	cur_cap := captures.Capture{}
+	cur_cap.Init(path, a.Privacy, a.Bssid, a.Essid)
+
+	return cur_atk, cur_cap, err
 }
 
 // DEAUTH infinitely the Client
