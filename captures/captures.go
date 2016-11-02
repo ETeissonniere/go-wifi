@@ -28,12 +28,12 @@ import (
 // Capture struct: handle airodump captures to crack them with aircrack-ng
 type (
 	Capture struct {
-	Key       string `json:"key"`
-	Target    Target  `json:"target"`
-	Handshake bool   `json:"handshake captured"`
-	IVs       int    `json:"ivs"`
-	Cracking  bool   `json:"trying to crack"`
-	pcap_file string
+		Key       string `json:"key"`
+		Target    Target  `json:"target"`
+		Handshake bool   `json:"handshake captured"`
+		IVs       int    `json:"ivs"`
+		Cracking  bool   `json:"trying to crack"`
+		pcap_file string
 	}
 
 	Target struct {
