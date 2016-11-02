@@ -21,7 +21,11 @@
 package captures
 
 import (
+	"io/ioutil"
+	"math/rand"
+	"os"
 	"os/exec"
+	"strconv"
 	"strings"
 )
 
@@ -54,12 +58,12 @@ func (c *Capture) Init(path_to_captures string, privacy string, bssid string, es
 	c.Target.Privacy = privacy
 
 	/*
-	// Check if we have an Handshake
-	if privacy == "WPA" || privacy == "WPA2" {
-		c.checkForHandshake()
-	}
+		// Check if we have an Handshake
+		if privacy == "WPA" || privacy == "WPA2" {
+			c.checkForHandshake()
+		}
 
-	c.getIVs()
+		c.getIVs()
 	*/
 }
 
@@ -68,10 +72,85 @@ func (c *Capture) TryKeys(...string) string {
 	return nil
 }
 
-// Return success, ascii key
-func (c *Capture) AttemptToCrack() (bool, string) {
-	return false, nil
+// Return ascii key; if cracking WEP dict can be null
+func (c *Capture) AttemptToCrack(dict string) string {
+	// Do not crack a second time!
+	if c.Key != nil {
+		return c.Key
+	}
+
+	// Start here
+	var key string
+
+	if (c.Target.Privacy == "WPA" || c.Target.Privacy == "WPA2") && dict != nil {
+		key = c.crackWPA(dict)
+	} else if c.Target.Privacy == "WEP" {
+		key = c.crackWEP()
+	} else {
+		key = nil
+	}
+
+	if key != nil {
+		c.Key = key
+	}
+
+	return key
 }
+
+func (c *Capture) crackWPA(dict string) string {
+	// I use a random file so you can run the func in parallel
+	path_to_key := os.TempDir() + "go-wifi_key" + strconv.Itoa(rand.Uint32())
+
+	// If the file exist, delete it
+	os.Remove(path_to_key)
+
+	cmd := exec.Command("aircrack-ng", "-a", "2", "-l", path_to_key, "-w", dict, "-b", c.Target.Bssid, c.pcap_file)
+	cmd.Run()
+
+	// Wait termination so we can get the key
+	cmd.Wait()
+
+	key_buf, err := ioutil.ReadFile(path_to_key)
+	if err != nil {
+		// no key found
+		return nil
+	}
+
+	return string(key_buf)
+}
+
+func (c *Capture) crackWEP() string {
+	// Start with PTW
+	// I use a random file so you can run the func in parallel
+	path_to_key := os.TempDir() + "go-wifi_key" + strconv.Itoa(rand.Uint32())
+
+	// If the file exist, delete it
+	os.Remove(path_to_key)
+
+	cmd := exec.Command("aircrack-ng", "-D", "-z", "-a", "1", "-l", path_to_key, "-b", c.Target.Bssid, c.pcap_file)
+	cmd.Run()
+
+	// Wait termination so we can get the key
+	cmd.Wait()
+
+	// Check if we succeed
+	key_buf, err := ioutil.ReadFile(path_to_key)
+	if err != nil {
+		// no key found, start Korek
+		cmd = exec.Command("aircrack-ng", "-D", "-K", "-a", "1", "-l", path_to_key, "-b", c.Target.Bssid, c.pcap_file)
+		cmd.Run()
+		cmd.Wait()
+
+		key_buf, err = ioutil.ReadFile(path_to_key)
+		if err != nil {
+			// Korek and PTW failed, exit
+			return nil
+		}
+	}
+
+	// key_buf has a key!
+}
+
 /*
 func (c *Capture) checkForHandshake() {
 	// Thank you wifite (l. 2478, has_handshake_aircrack)

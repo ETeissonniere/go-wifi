@@ -133,6 +133,7 @@ func (a *AP) ArpReplay(iface string) (attacks.Attack, error) {
 
 // Start a capture process
 func (a *AP) Capture(iface string) (attacks.Attack, captures.Capture, error) {
+	// Note: I do not use a TempDir since you may want to keep the pcaps
 	path := "go-wifi_capture-" + strconv.Itoa(captures_nb)
 	captures_nb += 1
 
