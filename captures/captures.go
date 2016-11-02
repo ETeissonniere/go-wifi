@@ -21,30 +21,40 @@
 package captures
 
 import (
-	"../AP"
 	"os/exec"
 	"strings"
 )
 
 // Capture struct: handle airodump captures to crack them with aircrack-ng
-type Capture struct {
+type (
+	Capture struct {
 	Key       string `json:"key"`
-	Target    AP.AP  `json:"target"`
+	Target    Target  `json:"target"`
 	Handshake bool   `json:"handshake captured"`
 	IVs       int    `json:"ivs"`
 	Cracking  bool   `json:"trying to crack"`
 	pcap_file string
-}
+	}
+
+	Target struct {
+		Bssid string `json:"bssid`
+		Essid string `json:"essid"`
+		// WPA, WPA2, WEP, OPN
+		Privacy string `json:"privacy"`
+	}
+)
 
 // Build the struct thanks to the dir (with .pcap and .csv) path
-func (c *Capture) Init(path_to_captures string, target AP.AP) {
+func (c *Capture) Init(path_to_captures string, privacy string, bssid string, essid string) {
 	c.pcap_file = path_to_captures + "go-wifi-01.cap"
 
 	// Fill the struct!
-	c.Target = target // Everything is there (privacy etc...)
+	c.Target.Bssid = bssid
+	c.Target.Essid = essid
+	c.Target.Privacy = privacy
 
 	// Check if we have an Handshake
-	if target.Privacy == "WPA" || target.Privacy == "WPA2" {
+	if privacy == "WPA" || privacy == "WPA2" {
 		c.checkForHandshake()
 	}
 
