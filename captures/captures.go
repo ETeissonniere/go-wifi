@@ -16,7 +16,7 @@
    along with this program; if not, write to the Free Software Foundation,
    Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 
- */
+*/
 
 package captures
 
@@ -29,7 +29,7 @@ import (
 type (
 	Capture struct {
 		Key       string `json:"key"`
-		Target    Target  `json:"target"`
+		Target    Target `json:"target"`
 		Handshake bool   `json:"handshake captured"`
 		IVs       int    `json:"ivs"`
 		Cracking  bool   `json:"trying to crack"`
