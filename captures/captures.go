@@ -37,7 +37,7 @@ type (
 	}
 
 	Target struct {
-		Bssid string `json:"bssid`
+		Bssid string `json:"bssid"`
 		Essid string `json:"essid"`
 		// WPA, WPA2, WEP, OPN
 		Privacy string `json:"privacy"`
