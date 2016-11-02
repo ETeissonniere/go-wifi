@@ -22,6 +22,8 @@ package captures
 
 import (
 	"../AP"
+	"os/exec"
+	"strings"
 )
 
 // Capture struct: handle airodump captures to crack them with aircrack-ng
@@ -52,16 +54,27 @@ func (c *Capture) Init(path_to_captures string, target AP.AP) {
 
 // Return succesfull key
 func (c *Capture) TryKeys(...string) string {
-
+	return nil
 }
 
 // Return success, ascii key
 func (c *Capture) AttemptToCrack() (bool, string) {
-
+	return false, nil
 }
 
 func (c *Capture) checkForHandshake() {
+	// Thank you wifite (l. 2478, has_handshake_aircrack)
+	cmd := exec.Command(`echo "" | aircrack-ng -a 2 -w - -b ` + c.Target.Bssid + " " + c.pcap_file)
 
+	ouptut, err := cmd.Output()
+
+	if err == nil {
+		if strings.Contains(string(ouptut), "Passphrase not in dictionary") {
+			c.Handshake = true
+		} else {
+			c.Handshake = false
+		}
+	}
 }
 
 func (c *Capture) getIVs() {
