@@ -57,19 +57,37 @@ func (c *Capture) Init(path_to_captures string, privacy string, bssid string, es
 	c.Target.Essid = essid
 	c.Target.Privacy = privacy
 
-	/*
-		// Check if we have an Handshake
-		if privacy == "WPA" || privacy == "WPA2" {
-			c.checkForHandshake()
-		}
+	// Check if we have an Handshake
+	if privacy == "WPA" || privacy == "WPA2" {
+		c.checkForHandshake()
+	}
 
-		c.getIVs()
-	*/
+	c.getIVs()
 }
 
 // Return succesfull key
-func (c *Capture) TryKeys(...string) string {
-	return nil
+func (c *Capture) TryKeys(keys ...string) string {
+	if c.Target.Privacy == "WEP" || c.Target.Privacy == "OPN" {
+		// Only wpa
+		return nil
+	}
+
+	// build a temp dict
+	path := os.TempDir() + "go-wifi-tmp-dict"
+
+	file, err := os.Create(path)
+	if err != nil {
+		// Got an error, exit
+		return
+	}
+	defer file.Close()
+	defer os.Remove(path)
+
+	for _, key := range keys {
+		file.WriteString(key + "\n")
+	}
+
+	return c.crackWPA(path)
 }
 
 // Return ascii key; if cracking WEP dict can be null
@@ -152,23 +170,37 @@ func (c *Capture) crackWEP() string {
 	return string(key_buf)
 }
 
-/*
 func (c *Capture) checkForHandshake() {
 	// Thank you wifite (l. 2478, has_handshake_aircrack)
-	cmd := exec.Command(`echo "" | aircrack-ng -a 2 -w - -b ` + c.Target.Bssid + " " + c.pcap_file)
+	// build a temp dict
+	path := os.TempDir() + "go-wifi-fake-dict"
 
-	ouptut, err := cmd.Output()
+	file, err := os.Create(path)
+	if err != nil {
+		// Got an error, exit
+		return
+	}
+	defer file.Close()
 
-	if err == nil {
+	file.WriteString("that_is_a_fake_key_no_one_will_use")
+
+	cmd := exec.Command("aircrack-ng",  "-a", "2", "-w", path, "-b", "c.Target.Bssid", "c.pcap_file")
+
+	ouptut, err2 := cmd.Output()
+
+	if err2 == nil {
 		if strings.Contains(string(ouptut), "Passphrase not in dictionary") {
 			c.Handshake = true
 		} else {
 			c.Handshake = false
 		}
 	}
+
+	// Delete file
+	os.Remove(path)
 }
 
 func (c *Capture) getIVs() {
-
+	// TODO: count ivs!
+	c.IVs = nil
 }
-*/
