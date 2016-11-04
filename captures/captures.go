@@ -149,6 +149,7 @@ func (c *Capture) crackWEP() string {
 	}
 
 	// key_buf has a key!
+	return string(key_buf)
 }
 
 /*
