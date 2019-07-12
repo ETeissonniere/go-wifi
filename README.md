@@ -1,4 +1,4 @@
-> The following project has been abandonned based on my lack of time.
+> The following project has been abandoned based on my lack of time.
 
 # Go-Wifi
 Okay, here is go-wifi a unique golang lib dedicated to wifi pentesting!
